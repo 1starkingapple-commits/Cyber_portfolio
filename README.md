@@ -39,4 +39,4 @@ Welcome! This repository hosts the source code for my personal portfolio website
 
 - **GitHub:** [github.com/1starkingapple-commits](https://github.com/1starkingapple-commits)
 - **LinkedIn:** [linkedin.com/in/mushab-haroon-6371723b5](https://www.linkedin.com/in/mushab-haroon-6371723b5)
-- **Email:** 1starkingapple@gmail
+- **Email:** 1starkingapple@gmail.com
