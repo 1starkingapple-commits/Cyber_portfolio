@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Air Drawing & Eraser Gesture Canvas</title>
   
-  <!-- MediaPipe & Camera Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
@@ -31,7 +30,6 @@
     }
     h1 { color: var(--accent); font-size: 1.6rem; margin-bottom: 0.5rem; text-align: center; }
     .status { margin-bottom: 1rem; color: #94a3b8; font-size: 0.9rem; text-align: center; }
-    
     .viewport-container {
       position: relative;
       width: 100%;
@@ -44,51 +42,20 @@
       background: #000;
     }
     video { display: none; }
-    canvas {
-      width: 100%;
-      height: 100%;
-      transform: scaleX(-1); /* Mirror view */
-    }
-    
-    .controls-row {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-      margin-top: 1.5rem;
-    }
-    .gesture-box {
-      background: var(--card);
-      padding: 0.75rem 1.25rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
+    canvas { width: 100%; height: 100%; transform: scaleX(-1); }
+    .controls-row { display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem; }
+    .gesture-box { background: var(--card); padding: 0.75rem 1.25rem; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; }
     .highlight { color: #4ade80; font-weight: bold; }
-    .clear-btn {
-      background: #ef4444;
-      color: #fff;
-      border: none;
-      padding: 0.75rem 1.25rem;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: monospace;
-    }
+    .clear-btn { background: #ef4444; color: #fff; border: none; padding: 0.75rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: monospace; }
     .clear-btn:hover { background: #dc2626; }
-
-    .nav-link {
-      margin-top: 1.5rem;
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
+    .nav-link { margin-top: 1.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
     .nav-link:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 
   <h1>Computer Vision: Air Drawing & Eraser</h1>
-  <div class="status"><b>Pinch fingers together</b> to draw. <b>Open hand</b> to use the red eraser!</div>
+  <div class="status"><b>Pinch fingers</b> to draw lines. <b>Open hand</b> to use the red eraser!</div>
 
   <div class="viewport-container">
     <video id="webcam"></video>
@@ -97,137 +64,4 @@
 
   <div class="controls-row">
     <div class="gesture-box">
-      State: <span id="gesture-text" class="highlight">Initializing camera...</span>
-    </div>
-    <button class="clear-btn" onclick="clearCanvas()">Clear Screen</button>
-  </div>
-
-  <a href="index.html" class="nav-link">&larr; Back to Portfolio Homepage</a>
-
-  <script>
-    const videoElement = document.getElementById('webcam');
-    const canvasElement = document.getElementById('output_canvas');
-    const canvasCtx = canvasElement.getContext('2d');
-    const gestureText = document.getElementById('gesture-text');
-
-    let drawingPaths = [];
-    let isPinching = false;
-
-    const hands = new Hands({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-    });
-
-    hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7
-    });
-
-    hands.onResults(onResults);
-
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 640,
-      height: 480
-    });
-    camera.start();
-
-    function onResults(results) {
-      canvasCtx.save();
-      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-      
-      // Draw camera background feed
-      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
-
-      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        const landmarks = results.multiHandLandmarks[0];
-
-        const indexTip = landmarks[8];
-        const thumbTip = landmarks[4];
-
-        const ix = indexTip.x * canvasElement.width;
-        const iy = indexTip.y * canvasElement.height;
-        const tx = thumbTip.x * canvasElement.width;
-        const ty = thumbTip.y * canvasElement.height;
-
-        // Euclidean distance between thumb and index tips
-        const distance = Math.hypot(ix - tx, iy - ty);
-
-        // Threshold set cleanly to 40 pixels for pinch detection
-        if (distance < 40) {
-          isPinching = true;
-          gestureText.innerText = "PINCHED: Drawing Active ✍️";
-          
-          if (drawingPaths.length === 0 || drawingPaths[drawingPaths.length - 1].drawingFinished) {
-            drawingPaths.push([]); // Create a new line stroke
-          }
-          drawingPaths[drawingPaths.length - 1].push({ x: ix, y: iy });
-        } else {
-          if (isPinching) {
-            // Mark current stroke as finished when releasing pinch
-            if (drawingPaths.length > 0) {
-              drawingPaths[drawingPaths.length - 1].drawingFinished = true;
-            }
-          }
-          isPinching = false;
-          
-          // ERASER MODE: Index finger acts as an eraser when not pinching
-          let erasedAny = false;
-          drawingPaths = drawingPaths.map(path => {
-            return path.filter(pt => {
-              const distToEraser = Math.hypot(pt.x - ix, pt.y - iy);
-              if (distToEraser < 30) {
-                erasedAny = true;
-                return false; // Remove point touched by index finger
-              }
-              return true;
-            });
-          }).filter(path => path.length > 1);
-
-          if (erasedAny) {
-            gestureText.innerText = "ERASING: Clearing lines 🧹";
-          } else {
-            gestureText.innerText = "Eraser Active (Pinch to draw)";
-          }
-        }
-
-        // Draw cursor indicator (Green dot when pinching, Red circle when erasing)
-        drawCursor(canvasCtx, ix, iy, isPinching);
-        drawHandSkeleton(canvasCtx, landmarks);
-      } else {
-        isPinching = false;
-        gestureText.innerText = "Waiting for hand...";
-      }
-
-      // Render all active drawing paths
-      renderPaths(canvasCtx, drawingPaths);
-      canvasCtx.restore();
-    }
-
-    function renderPaths(ctx, paths) {
-      ctx.strokeStyle = "#38bdf8"; // Neon blue color
-      ctx.lineWidth = 5;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.shadowColor = "#38bdf8";
-      ctx.shadowBlur = 10;
-
-      paths.forEach(path => {
-        if (path.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(path[0].x, path[0].y);
-        for (let i = 1; i < path.length; i++) {
-          ctx.lineTo(path[i].x, path[i].y);
-        }
-        ctx.stroke();
-      });
-      ctx.shadowBlur = 0;
-    }
-
-    function drawCursor(ctx, x, y, pinching) {
-      ctx.beginPath();
-      ctx.arc(x, y, pinching ? 10 : 18, 0, 2 * Math.PI);
-      ctx.fillStyle = pinching ? "#4ade80" : "rgba(239, 68
+      State: <span id="gesture-text" class="
