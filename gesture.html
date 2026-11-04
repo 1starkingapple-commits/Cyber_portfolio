@@ -88,7 +88,7 @@
 <body>
 
   <h1>Computer Vision: Air Drawing & Eraser</h1>
-  <div class="status"><b>Pinch</b> to draw lines. Touch lines with your <b>Index Finger</b> to erase them!</div>
+  <div class="status"><b>Pinch fingers together</b> to draw. <b>Open hand</b> to use the red eraser!</div>
 
   <div class="viewport-container">
     <video id="webcam"></video>
@@ -153,22 +153,81 @@
         const tx = thumbTip.x * canvasElement.width;
         const ty = thumbTip.y * canvasElement.height;
 
+        // Euclidean distance between thumb and index tips
         const distance = Math.hypot(ix - tx, iy - ty);
 
-        if (distance < 35) {
-          // PINCH -> DRAWING MODE
+        // Threshold set cleanly to 40 pixels for pinch detection
+        if (distance < 40) {
+          isPinching = true;
           gestureText.innerText = "PINCHED: Drawing Active ✍️";
-          if (!isPinching) {
-            isPinching = true;
-            drawingPaths.push([]); // Start a new stroke path
+          
+          if (drawingPaths.length === 0 || drawingPaths[drawingPaths.length - 1].drawingFinished) {
+            drawingPaths.push([]); // Create a new line stroke
           }
           drawingPaths[drawingPaths.length - 1].push({ x: ix, y: iy });
         } else {
-          // OPEN FINGER -> ERASER MODE
+          if (isPinching) {
+            // Mark current stroke as finished when releasing pinch
+            if (drawingPaths.length > 0) {
+              drawingPaths[drawingPaths.length - 1].drawingFinished = true;
+            }
+          }
           isPinching = false;
           
-          // Check if index tip touches any drawn points and remove them
+          // ERASER MODE: Index finger acts as an eraser when not pinching
           let erasedAny = false;
           drawingPaths = drawingPaths.map(path => {
             return path.filter(pt => {
-              const distToEraser = Math.hypot(pt.x
+              const distToEraser = Math.hypot(pt.x - ix, pt.y - iy);
+              if (distToEraser < 30) {
+                erasedAny = true;
+                return false; // Remove point touched by index finger
+              }
+              return true;
+            });
+          }).filter(path => path.length > 1);
+
+          if (erasedAny) {
+            gestureText.innerText = "ERASING: Clearing lines 🧹";
+          } else {
+            gestureText.innerText = "Eraser Active (Pinch to draw)";
+          }
+        }
+
+        // Draw cursor indicator (Green dot when pinching, Red circle when erasing)
+        drawCursor(canvasCtx, ix, iy, isPinching);
+        drawHandSkeleton(canvasCtx, landmarks);
+      } else {
+        isPinching = false;
+        gestureText.innerText = "Waiting for hand...";
+      }
+
+      // Render all active drawing paths
+      renderPaths(canvasCtx, drawingPaths);
+      canvasCtx.restore();
+    }
+
+    function renderPaths(ctx, paths) {
+      ctx.strokeStyle = "#38bdf8"; // Neon blue color
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.shadowColor = "#38bdf8";
+      ctx.shadowBlur = 10;
+
+      paths.forEach(path => {
+        if (path.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+    }
+
+    function drawCursor(ctx, x, y, pinching) {
+      ctx.beginPath();
+      ctx.arc(x, y, pinching ? 10 : 18, 0, 2 * Math.PI);
+      ctx.fillStyle = pinching ? "#4ade80" : "rgba(239, 68
