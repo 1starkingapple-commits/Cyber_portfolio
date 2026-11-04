@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybersecurity & Network Engineering Portfolio</title>
+  <style>
+    :root {
+      --bg: #07090e;
+      --card-bg: #0f172a;
+      --border: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --terminal-bg: #020617;
+      --terminal-green: #4ade80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* Header */
+    header {
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+    h1 { font-size: 2.25rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--accent); font-weight: 600; font-size: 1.1rem; margin-bottom: 0.75rem; font-family: monospace; }
+    .bio { color: var(--muted); max-width: 750px; margin-bottom: 1rem; }
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 1.25rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+    .links a:hover { text-decoration: underline; }
+
+    .section-title {
+      font-size: 1.2rem;
+      color: #fff;
+      margin-bottom: 1rem;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* Skills Grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .skill-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .skill-card h4 { color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag {
+      background: #1e293b;
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-family: monospace;
+    }
+
+    /* Interactive Terminal Section */
+    .terminal-box {
+      background: var(--terminal-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+    }
+    .terminal-header {
+      background: #0f172a;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #f59e0b; }
+    .dot-green { background: #10b981; }
+    .terminal-title { font-size: 0.8rem; color: var(--muted); margin-left: auto; margin-right: auto; font-family: monospace; }
+    
+    .terminal-body {
+      padding: 1rem;
+      height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--terminal-green);
+    }
+    .terminal-input-line {
+      display: flex;
+      align-items: center;
+      background: #090d16;
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .terminal-prompt { color: var(--accent); font-family: monospace; margin-right: 0.5rem; }
+    .terminal-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: monospace;
+      font-size: 0.9rem;
+      width: 100%;
+      outline: none;
+    }
+
+    /* Subnet Calculator Tool Widget */
+    .tool-widget {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .tool-inputs {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .tool-input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-family: monospace;
+      flex-grow: 1;
+    }
+    .tool-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tool-btn:hover { background: #0284c7; color: #fff; }
+    .tool-output {
+      background: #020617;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    /* Projects Section */
+    .project-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .project-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .project-title { font-size: 1.15rem; color: #fff; }
+    .project-date { color: var(--muted); font-size: 0.85rem; }
+    .project-desc { color: var(--muted); margin-bottom: 1rem; font-size: 0.95rem; }
+    
+    .project-details {
+      background: #07090e;
+      border-radius: 6px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    .project-details ul { padding-left: 1.25rem; color: var(--muted); }
+    .project-details li { margin-bottom: 0.3rem; }
+    .project-details strong { color: var(--text); }
+
+    .btn {
+      display: inline-block;
+      background: var(--accent);
+      color: #07090e;
+      font-weight: 600;
+      padding: 0.4rem 0.9rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+    .btn:hover { background: #0284c7; color: #fff; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- HEADER -->
+    <header>
+      <h1>Mushab Haroon</h1>
+      <div class="subtitle">root@cyber-analyst:~$ portfolio_</div>
+      <p class="bio">
+        Information Technology & Software Engineering student specializing in network administration, system infrastructure hardening, traffic analysis, and automated security monitoring.
+      </p>
+      <div class="links">
+        <a href="https://github.com/1starkingapple-commits" target="_blank">GitHub</a>
+        <a href="https://linkedin.com/in/mushab-haroon-6371723b5" target="_blank">LinkedIn</a>
+        <a href="mailto:1starkingapple@gmail.com">Email Contact</a>
+      </div>
+    </header>
+
+    <!-- TECHNICAL COMPETENCIES -->
+    <h2 class="section-title">Technical Competencies</h2>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <h4>Networking & Routing</h4>
+        <div class="tags">
+          <span class="tag">TCP/IP</span>
+          <span class="tag">VLANs</span>
+          <span class="tag">pfSense</span>
+          <span class="tag">Subnetting</span>
+          <span class="tag">DNS/DHCP</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h4>Security & Analysis</h4>
+        <div class="tags">
+          <span class="tag">Splunk</span>
+          <span class="tag">Wireshark</span>
+          <span class="tag">Nmap</span>
+          <span class="tag">Active Directory</span>
+          <span class="tag">Wazuh</span>
+        </div>
+      </div>
+      <div class="skill-card">
+        <h4>Systems & Scripting</h4>
+        <div class="tags">
+          <span class="tag">Linux / Windows Server</span>
+          <span class="tag">Python</span>
+          <span class="tag">Bash</span>
+          <span class="tag">Java Swing / MySQL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE HACKER TERMINAL -->
+    <h2 class="section-title">Interactive Terminal Sandbox</h2>
+    <div class="terminal-box">
+      <div class="terminal-header">
+        <div class="dot dot-red"></div>
+        <div class="dot dot-yellow"></div>
+        <div class="dot dot-green"></div>
+        <div class="terminal-title">bash — visitor@portfolio:~</div>
+      </div>
+      <div class="terminal-body" id="terminal-output">
+        Type <span style="color: #38bdf8;">'help'</span> to see available commands or <span style="color: #38bdf8;">'skills'</span> to check my tool stack.<br>
+      </div>
+      <div class="terminal-input-line">
+        <span class="terminal-prompt">visitor@cyber-portfolio:~$</span>
+        <input type="text" class="terminal-input" id="terminal-input" placeholder="type a command..." autofocus onkeypress="handleTerminal(event)">
+      </div>
+    </div>
+
+    <!-- LIVE SUBJNET CALCULATOR WIDGET -->
+    <h2 class="section-title">Quick Subnet Utility Widget</h2>
+    <div class="tool-widget">
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 0.75rem;">Test network calculation tool logic (e.g., enter CIDR prefix like /24 or /28):</p>
+      <div class="tool-inputs">
+        <input type="text" id="cidr-input" class="tool-input" placeholder="Enter CIDR (e.g., 24)" value="24">
+        <button class="tool-btn" onclick="calculateSubnet()">Calculate</button>
+      </div>
+      <div class="tool-output" id="tool-output">
+        Result: Enter a CIDR value above to compute total hosts and subnet mask.
+      </div>
+    </div>
+
+    <!-- PROJECTS SECTION -->
+    <h2 class="section-title">Practical Lab Projects</h2>
+
+    <!-- PROJECT 1 -->
+    <div class="project-card">
+      <div class="project-header">
+        <h3 class="project-title">Enterprise Virtual Home Lab & Active Directory Hardening</h3>
+        <span class="project-date">2026</span>
+      </div>
+      <p class="project-desc">Designed and deployed a multi-tier isolated enterprise environment to simulate enterprise network operations and active adversary mitigation.</p>
+      
+      <div class="tags" style="margin-bottom: 0.75rem;">
+        <span class="tag">pfSense</span>
+        <span class="tag">Windows Server</span>
+        <span class="tag">Active Directory</span>
+        <span class="tag">VirtualBox</span>
+      </div>
+
+      <div class="project-details">
+        <ul>
+          <li><strong>Infrastructure:</strong> Configured isolated subnets (Management, LAN, DMZ) using pfSense router/firewall rules.</li>
+          <li><strong>Identity & Access:</strong> Deployed Active Directory Domain Services (AD DS) and configured GPO policies.</li>
+        </ul>
+      </div>
+      <a href="https://github.com/1starkingapple-commits/Cyber_portfolio" class="btn" target="_blank">View GitHub Repository &rarr;</a>
+    </div>
+
+    <!-- PROJECT 2 -->
+    <div class="project-card">
+      <div class="project-header">
+        <h3 class="project-title">Network Traffic Analysis & Packet Inspection</h3>
+        <span class="project-date">2026</span>
+      </div>
+      <p class="project-desc">Captured and analyzed raw network packets to detect malicious behavior and unencrypted data leakage within local network segments.</p>
+      
+      <div class="tags" style="margin-bottom: 0.75rem;">
+        <span class="tag">Wireshark</span>
+        <span class="tag">tcpdump</span>
+        <span class="tag">Protocol Analysis</span>
+      </div>
+
+      <div class="project-details">
+        <ul>
+          <li><strong>Analysis:</strong> Inspected PCAP files capturing anomalous TXT request queries and Base64 payloads.</li>
+          <li><strong>Mitigation:</strong> Recommended DNS sinkholing rules and IDS signature configurations.</li>
+        </ul>
+      </div>
+      <a href="https://github.com/1starkingapple-commits/Cyber_portfolio" class="btn" target="_blank">View GitHub Repository &rarr;</a>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+      <p>&copy; 2026 Mushab Haroon • Built for Network & Cybersecurity Portfolio</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // Interactive Terminal Logic
+    function handleTerminal(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('terminal-input');
+        const output = document.getElementById('terminal-output');
+        const val = input.value.trim().toLowerCase();
+        
+        let response = "";
+        if (val === 'help') {
+          response = "Available commands: skills, projects, contact, clear, whoami";
+        } else if (val === 'skills') {
+          response = "Networks: pfSense, VLANs, TCP/IP | Security: Wireshark, Splunk, Active Directory | Code: Python, Bash, Java";
+        } else if (val === 'projects') {
+          response = "1. Enterprise Virtual Home Lab\n2. Network Traffic & Packet Inspection\n3. SIEM Log Aggregation";
+        } else if (val === 'contact') {
+          response = "Email: 1starkingapple@gmail.com | LinkedIn: mushab-haroon-6371723b5";
+        } else if (val === 'whoami') {
+          response = "Mushab Haroon - IT & Software Engineering Student / Cybersecurity Practitioner";
+        } else if (val === 'clear') {
+          output.innerHTML = "";
+          input.value = "";
+          return;
+        } else if (val === '') {
+          return;
+        } else {
+          response = `command not found: ${val}. Type 'help' for options.`;
+        }
+
+        output.innerHTML += `<br><span style="color: #38bdf8;">visitor@cyber-portfolio:~$</span> ${input.value}`;
+        output.innerHTML += `<br>${response.replace(/\n/g, '<br>')}`;
+        input.value = "";
+        output.scrollTop = output.scrollHeight;
+      }
+    }
+
+    // Subnet Tool Logic
+    function calculateSubnet() {
+      const cidr = parseInt(document.getElementById('cidr-input').value);
+      const output = document.getElementById('tool-output');
+      
+      if (isNaN(cidr) || cidr < 0 || cidr > 32) {
+        output.innerHTML = "<span style='color: #ef4444;'>Error: Please enter a valid CIDR prefix between 0 and 32.</span>";
+        return;
+      }
+
+      const totalHosts = Math.pow(2, 32 - cidr);
+      const usableHosts = cidr >= 31 ? 0 : totalHosts - 2;
+      
+      output.innerHTML = `CIDR: /${cidr} | Total IP Addresses: ${totalHosts} | Usable Hosts: ${usableHosts > 0 ? usableHosts : 0}`;
+    }
+  </script>
+</body>
+</html>
