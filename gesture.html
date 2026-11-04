@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-Time Hand Gesture Reaction Canvas</title>
+  <title>Air Drawing & Eraser Gesture Canvas</title>
   
   <!-- MediaPipe & Camera Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -30,7 +30,7 @@
       padding: 1.5rem;
     }
     h1 { color: var(--accent); font-size: 1.6rem; margin-bottom: 0.5rem; text-align: center; }
-    .status { margin-bottom: 1.5rem; color: #94a3b8; font-size: 0.9rem; text-align: center; }
+    .status { margin-bottom: 1rem; color: #94a3b8; font-size: 0.9rem; text-align: center; }
     
     .viewport-container {
       position: relative;
@@ -50,15 +50,32 @@
       transform: scaleX(-1); /* Mirror view */
     }
     
-    .gesture-box {
+    .controls-row {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
       margin-top: 1.5rem;
+    }
+    .gesture-box {
       background: var(--card);
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 1.25rem;
       border-radius: 8px;
       border: 1px solid var(--border);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     .highlight { color: #4ade80; font-weight: bold; }
+    .clear-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    .clear-btn:hover { background: #dc2626; }
+
     .nav-link {
       margin-top: 1.5rem;
       color: var(--accent);
@@ -70,16 +87,19 @@
 </head>
 <body>
 
-  <h1>Computer Vision: Hand Gesture Reaction Lab</h1>
-  <div class="status">Allow camera access and point your hand at the screen to trigger real-time canvas effects.</div>
+  <h1>Computer Vision: Air Drawing & Eraser</h1>
+  <div class="status"><b>Pinch</b> to draw lines. Touch lines with your <b>Index Finger</b> to erase them!</div>
 
   <div class="viewport-container">
     <video id="webcam"></video>
     <canvas id="output_canvas" width="640" height="480"></canvas>
   </div>
 
-  <div class="gesture-box">
-    State: <span id="gesture-text" class="highlight">Initializing camera...</span>
+  <div class="controls-row">
+    <div class="gesture-box">
+      State: <span id="gesture-text" class="highlight">Initializing camera...</span>
+    </div>
+    <button class="clear-btn" onclick="clearCanvas()">Clear Screen</button>
   </div>
 
   <a href="index.html" class="nav-link">&larr; Back to Portfolio Homepage</a>
@@ -90,7 +110,8 @@
     const canvasCtx = canvasElement.getContext('2d');
     const gestureText = document.getElementById('gesture-text');
 
-    let particles = [];
+    let drawingPaths = [];
+    let isPinching = false;
 
     const hands = new Hands({
       locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -117,6 +138,8 @@
     function onResults(results) {
       canvasCtx.save();
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      
+      // Draw camera background feed
       canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
@@ -133,75 +156,19 @@
         const distance = Math.hypot(ix - tx, iy - ty);
 
         if (distance < 35) {
-          gestureText.innerText = "PINCH DETECTED (Particle Burst!)";
-          createParticles(ix, iy);
+          // PINCH -> DRAWING MODE
+          gestureText.innerText = "PINCHED: Drawing Active ✍️";
+          if (!isPinching) {
+            isPinching = true;
+            drawingPaths.push([]); // Start a new stroke path
+          }
+          drawingPaths[drawingPaths.length - 1].push({ x: ix, y: iy });
         } else {
-          gestureText.innerText = "Tracking Index Fingertip";
-          drawGlowingPoint(canvasCtx, ix, iy);
-        }
-
-        drawHandSkeleton(canvasCtx, landmarks);
-      } else {
-        gestureText.innerText = "Waiting for hand...";
-      }
-
-      updateParticles(canvasCtx);
-      canvasCtx.restore();
-    }
-
-    function drawGlowingPoint(ctx, x, y) {
-      ctx.beginPath();
-      ctx.arc(x, y, 12, 0, 2 * Math.PI);
-      ctx.fillStyle = "#38bdf8";
-      ctx.shadowColor = "#38bdf8";
-      ctx.shadowBlur = 15;
-      ctx.fill();
-    }
-
-    function createParticles(x, y) {
-      for (let i = 0; i < 5; i++) {
-        particles.push({
-          x: x,
-          y: y,
-          vx: (Math.random() - 0.5) * 6,
-          vy: (Math.random() - 0.5) * 6,
-          radius: Math.random() * 4 + 2,
-          alpha: 1,
-          color: `hsl(${Math.random() * 60 + 120}, 100%, 60%)`
-        });
-      }
-    }
-
-    function updateParticles(ctx) {
-      for (let i = particles.length - 1; i >= 0; i--) {
-        let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.alpha -= 0.03;
-
-        if (p.alpha <= 0) {
-          particles.splice(i, 1);
-        } else {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, 2 * Math.PI);
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = p.alpha;
-          ctx.fill();
-          ctx.globalAlpha = 1.0;
-        }
-      }
-    }
-
-    function drawHandSkeleton(ctx, landmarks) {
-      ctx.strokeStyle = "#4ade80";
-      ctx.lineWidth = 2;
-      landmarks.forEach((pt) => {
-        ctx.beginPath();
-        ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 3, 0, 2 * Math.PI);
-        ctx.fillStyle = "#ffffff";
-        ctx.fill();
-      });
-    }
-  </script>
-</body>
-</html>
+          // OPEN FINGER -> ERASER MODE
+          isPinching = false;
+          
+          // Check if index tip touches any drawn points and remove them
+          let erasedAny = false;
+          drawingPaths = drawingPaths.map(path => {
+            return path.filter(pt => {
+              const distToEraser = Math.hypot(pt.x
