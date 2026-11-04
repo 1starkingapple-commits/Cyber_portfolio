@@ -64,4 +64,136 @@
 
   <div class="controls-row">
     <div class="gesture-box">
-      State: <span id="gesture-text" class="
+      State: <span id="gesture-text" class="highlight">Initializing camera...</span>
+    </div>
+    <button class="clear-btn" onclick="clearCanvas()">Clear Screen</button>
+  </div>
+
+  <a href="index.html" class="nav-link">&larr; Back to Portfolio Homepage</a>
+
+  <script>
+    const videoElement = document.getElementById('webcam');
+    const canvasElement = document.getElementById('output_canvas');
+    const canvasCtx = canvasElement.getContext('2d');
+    const gestureText = document.getElementById('gesture-text');
+
+    let drawingPaths = [];
+
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.7,
+      minTrackingConfidence: 0.7
+    });
+
+    hands.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 640,
+      height: 480
+    });
+    camera.start();
+
+    function onResults(results) {
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        const landmarks = results.multiHandLandmarks[0];
+        const indexTip = landmarks[8];
+        const thumbTip = landmarks[4];
+
+        const ix = indexTip.x * canvasElement.width;
+        const iy = indexTip.y * canvasElement.height;
+        const tx = thumbTip.x * canvasElement.width;
+        const ty = thumbTip.y * canvasElement.height;
+
+        const distance = Math.hypot(ix - tx, iy - ty);
+
+        if (distance < 40) {
+          // DRAWING MODE
+          gestureText.innerText = "PINCHED: Drawing Active ✍️";
+          if (drawingPaths.length === 0 || drawingPaths[drawingPaths.length - 1].finished) {
+            drawingPaths.push([]);
+          }
+          drawingPaths[drawingPaths.length - 1].push({ x: ix, y: iy });
+          drawCursor(canvasCtx, ix, iy, true);
+        } else {
+          // ERASER MODE
+          if (drawingPaths.length > 0 && !drawingPaths[drawingPaths.length - 1].finished) {
+            drawingPaths[drawingPaths.length - 1].finished = true;
+          }
+          gestureText.innerText = "Eraser Active (Pinch to draw)";
+
+          // Erase lines touched by index finger
+          drawingPaths = drawingPaths.map(path => {
+            return path.filter(pt => Math.hypot(pt.x - ix, pt.y - iy) > 25);
+          }).filter(path => path.length > 1);
+
+          drawCursor(canvasCtx, ix, iy, false);
+        }
+
+        drawHandSkeleton(canvasCtx, landmarks);
+      } else {
+        gestureText.innerText = "Waiting for hand...";
+      }
+
+      renderPaths(canvasCtx, drawingPaths);
+      canvasCtx.restore();
+    }
+
+    function renderPaths(ctx, paths) {
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.shadowColor = "#38bdf8";
+      ctx.shadowBlur = 10;
+
+      paths.forEach(path => {
+        if (path.length < 2) return;
+        ctx.beginPath();
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i].x, path[i].y);
+        }
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+    }
+
+    function drawCursor(ctx, x, y, pinching) {
+      ctx.beginPath();
+      ctx.arc(x, y, pinching ? 10 : 18, 0, 2 * Math.PI);
+      ctx.fillStyle = pinching ? "#4ade80" : "rgba(239, 68, 68, 0.5)";
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 12;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    function drawHandSkeleton(ctx, landmarks) {
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.lineWidth = 1;
+      landmarks.forEach((pt) => {
+        ctx.beginPath();
+        ctx.arc(pt.x * canvasElement.width, pt.y * canvasElement.height, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        ctx.fill();
+      });
+    }
+
+    function clearCanvas() {
+      drawingPaths = [];
+    }
+  </script>
+</body>
+</html>
